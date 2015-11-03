@@ -384,7 +384,7 @@ class ZMQLoggingHandler(logging.Handler):
             self._socket.send(json.dumps({
                 'context': self._context,
                 'message': message
-            }))
+            }, encoding='utf-8'))
         except Exception as e:
             self._fallback_logger.warn(
                 'Error sending message to logging server. ({0}: {1})'

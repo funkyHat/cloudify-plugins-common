@@ -38,6 +38,7 @@ class AMQPClient(object):
         'exclusive': False
     }
 
+    # TODO amqp_host should not have a default val, so it must be the 1st arg
     def __init__(self,
                  amqp_user='guest',
                  amqp_pass='guest',
@@ -47,8 +48,6 @@ class AMQPClient(object):
         self.connection = None
         self.channel = None
         self._is_closed = False
-        if amqp_host is None:
-            amqp_host = utils.get_manager_ip()
         credentials = pika.credentials.PlainCredentials(
             username=amqp_user,
             password=amqp_pass)
@@ -79,7 +78,7 @@ class AMQPClient(object):
         else:
             routing_key = self.LOGS_QUEUE_NAME
         exchange = ''
-        body = json.dumps(message)
+        body = json.dumps(message, encoding='utf-8')
         try:
             self.channel.basic_publish(exchange=exchange,
                                        routing_key=routing_key,

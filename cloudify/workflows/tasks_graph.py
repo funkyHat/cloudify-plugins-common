@@ -227,7 +227,8 @@ class TaskDependencyGraph(object):
         with open(task_dump_path, 'w') as f:
             f.write(json.dumps({
                 'tasks': [task.dump() for task in self.tasks_iter()],
-                'edges': [[s, t] for s, t in self.graph.edges_iter()]}))
+                'edges': [[s, t] for s, t in self.graph.edges_iter()]},
+                encoding='utf-8'))
 
 
 class forkjoin(object):

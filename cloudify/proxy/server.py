@@ -48,7 +48,7 @@ class CtxProxy(object):
             result = json.dumps({
                 'type': result_type,
                 'payload': payload
-            })
+            }, encoding='utf-8')
         except Exception, e:
             tb = StringIO()
             traceback.print_exc(file=tb)
@@ -60,7 +60,7 @@ class CtxProxy(object):
             result = json.dumps({
                 'type': 'error',
                 'payload': payload
-            })
+            }, encoding='utf-8')
         return result
 
     def close(self):

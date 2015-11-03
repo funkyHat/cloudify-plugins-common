@@ -108,7 +108,6 @@ class TaskHandler(object):
         split = self.cloudify_context['task_name'].split('.')
         dispatch_dir = tempfile.mkdtemp(prefix='task-{0}.{1}-'.format(
             split[0], split[-1]))
-
         # stdout/stderr are redirected to output. output is only displayed
         # in case something really bad happened. in the general case, output
         # that users want to see in log files, should go through the different
@@ -118,11 +117,15 @@ class TaskHandler(object):
             with open(os.path.join(dispatch_dir, 'input.json'), 'w') as f:
                 json.dump({
                     'cloudify_context': self.cloudify_context,
+                    # TODO should we add the following?
+                    # 'security_context':
+                    # self.cloudify_context['security_context'],
                     'args': self.args,
                     'kwargs': self.kwargs
                 }, f)
             env = self._build_subprocess_env()
             command_args = [sys.executable, __file__, dispatch_dir]
+
             try:
                 subprocess.check_call(command_args,
                                       env=env,
@@ -248,6 +251,7 @@ class TaskHandler(object):
                                             sys_prefix_fallback=False)
 
     def setup_logging(self):
+
         socket_url = self.cloudify_context.get('socket_url')
         if socket_url:
             import zmq
@@ -258,6 +262,8 @@ class TaskHandler(object):
                 handler_context = self.ctx.deployment.id
             except AttributeError:
                 handler_context = SYSTEM_DEPLOYMENT
+            except Exception as e:
+                raise e
             else:
                 # an operation may originate from a system wide workflow.
                 # in that case, the deployment id will be None
@@ -578,6 +584,7 @@ def dispatch(__cloudify_context, *args, **kwargs):
 
 
 def main():
+
     dispatch_dir = sys.argv[1]
     with open(os.path.join(dispatch_dir, 'input.json')) as f:
         dispatch_inputs = json.load(f)
@@ -596,7 +603,6 @@ def main():
         payload = handler.handle()
         payload_type = 'result'
     except BaseException as e:
-
         tb = StringIO.StringIO()
         traceback.print_exc(file=tb)
         trace_out = tb.getvalue()

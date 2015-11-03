@@ -99,6 +99,9 @@ class CommonContext(object):
 
         self.blueprint = BlueprintContext(self._context)
         self.deployment = DeploymentContext(self._context)
+        self.security_context = self._context.get('security_context', None)
+        if not self.security_context:
+            self.security_context = SecurityContext().to_dict()
 
 
 class BootstrapContext(object):
@@ -164,7 +167,7 @@ class BootstrapContext(object):
         @property
         def broker_ip(self):
             """
-            Returns the IP for connecting to rabbit.
+            Returns the host name or IP of the rabbit server.
             An empty string should result in clients using the manager IP.
             """
             return self._cloudify_agent.get('broker_ip')
@@ -196,6 +199,14 @@ class BootstrapContext(object):
             Returns the SSL public cert for connecting to rabbit.
             """
             return self._cloudify_agent.get('broker_ssl_cert')
+
+        @property
+        def verify_manager_certificate(self):
+            """
+            Returns true if agent requests to the manager should verify its
+            SSL certificate
+            """
+            return self._cloudify_agent.get('verify_manager_certificate')
 
     def __init__(self, bootstrap_context):
         self._bootstrap_context = bootstrap_context
@@ -231,23 +242,16 @@ class BootstrapContext(object):
         """
         return self._bootstrap_context.get('resources_prefix', '')
 
-    def broker_config(self, fallback_to_manager_ip=True):
+    def broker_config(self):
         """
         Returns dictionary containing broker configuration.
-
-        :param fallback_to_manager_ip: If True and there is no broker_ip in
-        context, manager ip will be used. Note that manager ip detection is
-        only possible within agent.
         """
         attributes = {}
         bootstrap_agent = self.cloudify_agent
         broker_user, broker_pass = utils.internal.get_broker_credentials(
             bootstrap_agent
         )
-        if bootstrap_agent.broker_ip:
-            attributes['broker_ip'] = bootstrap_agent.broker_ip
-        elif fallback_to_manager_ip:
-            attributes['broker_ip'] = utils.get_manager_ip()
+        attributes['broker_ip'] = bootstrap_agent.broker_ip
         attributes['broker_user'] = broker_user
         attributes['broker_pass'] = broker_pass
         attributes['broker_ssl_enabled'] = bootstrap_agent.broker_ssl_enabled
@@ -280,6 +284,56 @@ class DeploymentContext(EntityContext):
     def id(self):
         """The deployment id the plugin invocation belongs to."""
         return self._context.get('deployment_id')
+
+
+class SecurityContext(object):
+
+    def __init__(self, security_context=None):
+        if security_context:
+            self._security_context = security_context
+        else:
+            self._security_context = {
+                'security_enabled': False,
+                'rest_port': '80',
+                'rest_protocol': 'http',
+                'cloudify_username': '',
+                'cloudify_password': '',
+                'verify_manager_certificate': False,
+            }
+
+    def to_dict(self):
+        return self._security_context
+
+    @property
+    def security_enabled(self):
+        """True if security is enabled, False otherwise"""
+        return self._security_context.get('security_enabled')
+
+    @property
+    def rest_port(self):
+        """The port of the cloudify's REST server"""
+        return self._security_context.get('rest_port')
+
+    @property
+    def rest_protocol(self):
+        """The protocol of the cloudify's REST server"""
+        return self._security_context.get('rest_protocol')
+
+    @property
+    def cloudify_username(self):
+        """The username of the currently active user"""
+        return self._security_context.get('cloudify_username')
+
+    @property
+    def cloudify_password(self):
+        """The password of the currently active user"""
+        return self._security_context.get('cloudify_password')
+
+    @property
+    def verify_manager_certificate(self):
+        """True if the REST's SSL certificate should be verified,
+        False otherwise"""
+        return self._security_context.get('verify_manager_certificate')
 
 
 class NodeContext(EntityContext):
@@ -470,6 +524,7 @@ class RelationshipSubjectContext(object):
 
 
 class CloudifyContext(CommonContext):
+
     """
     A context object passed to plugins tasks invocations.
     The context object is used in plugins when interacting with
