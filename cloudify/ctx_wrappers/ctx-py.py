@@ -24,6 +24,8 @@ def check_output(*popenargs, **kwargs):
         if cmd is None:
             cmd = popenargs[0]
         error = subprocess.CalledProcessError(retcode, cmd)
+        with open('/tmp/ctxwrapper.log', 'a') as logfile:
+            logfile.write('***** output: {0}, stderr: {1}\n'.format(output, stderr))
         sys.stderr.write(stderr)
         error.stderr = stderr
         error.output = output
