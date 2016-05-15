@@ -120,6 +120,13 @@ def get_manager_file_server_host():
     return os.environ[constants.FILE_SERVER_HOST_KEY]
 
 
+def get_manager_file_server_protocol():
+    """
+    Returns the protocol of the manager file server
+    """
+    return os.environ[constants.FILE_SERVER_PROTOCOL_KEY]
+
+
 def get_manager_file_server_blueprints_root_url():
     """
     Returns the blueprints root url in the file server.
