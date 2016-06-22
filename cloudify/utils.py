@@ -195,7 +195,7 @@ def is_verify_ssl_certificate():
     Returns True if the rest client should verify the server SSL
      certificate, False otherwise.
     """
-    return os.environ[constants.VERIFY_CERTIFICATE_KEY]
+    return os.environ[constants.VERIFY_REST_CERTIFICATE_KEY]
 
 
 def get_local_rest_certificate():
