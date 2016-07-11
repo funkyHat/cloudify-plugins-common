@@ -15,7 +15,6 @@
 
 
 import sys
-import time
 import logging
 import json
 import datetime
