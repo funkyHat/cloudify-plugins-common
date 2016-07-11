@@ -285,8 +285,7 @@ def _send_event(ctx, context_type, event_type,
 
 
 def populate_base_item(item, message_type):
-    timezone = time.strftime("%z", time.gmtime())
-    timestamp = str(datetime.datetime.now())[0:-3] + timezone
+    timestamp = str(datetime.datetime.now())[0:-3]
     item['timestamp'] = timestamp
     item['message_code'] = None
     item['type'] = message_type
