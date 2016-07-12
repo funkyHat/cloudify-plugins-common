@@ -284,7 +284,7 @@ def _send_event(ctx, context_type, event_type,
 
 
 def populate_base_item(item, message_type):
-    timestamp = str(datetime.datetime.now())[0:-3]
+    timestamp = str(datetime.datetime.now())[0:-2]
     item['timestamp'] = timestamp
     item['message_code'] = None
     item['type'] = message_type
