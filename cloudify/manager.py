@@ -365,6 +365,13 @@ def get_provider_context():
 class DirtyTrackingDict(dict):
 
     def __init__(self, *args, **kwargs):
+        try:
+            # Can't provide _parent as a named keyword arg (without PEP 3102)
+            # because callers will end up providing the object they want
+            # converted to a dict to _parent instead of as part of *args.
+            self._parent = kwargs.pop('_parent')
+        except KeyError:
+            self._parent = None
         super(DirtyTrackingDict, self).__init__(*args, **kwargs)
         self.modifiable = True
         self.dirty = False
@@ -378,6 +385,10 @@ class DirtyTrackingDict(dict):
         r = super(DirtyTrackingDict, self).__delitem__(key)
         self._set_changed()
         return r
+
+    def __repr__(self):
+        return 'DirtyTrackingDict({})'.format(
+                super(DirtyTrackingDict, self).__repr__())
 
     def update(self, E=None, **F):
         r = super(DirtyTrackingDict, self).update(E, **F)
@@ -399,9 +410,21 @@ class DirtyTrackingDict(dict):
         self._set_changed()
         return r
 
+    def setdefault(self, k, d=None):
+        try:
+            return self[k]
+        except KeyError:
+            if isinstance(d, dict):
+                d = type(self)(d, _parent=self)
+            r = super(DirtyTrackingDict, self).setdefault(k, d)
+            self._set_changed()
+            return r
+
     def _set_changed(self):
         # python 2.6 doesn't have modifiable during copy.deepcopy
         if hasattr(self, 'modifiable') and not self.modifiable:
             raise NonRecoverableError('Cannot modify runtime properties of'
                                       ' relationship node instances')
         self.dirty = True
+        if self._parent:
+            self._parent._set_changed()
