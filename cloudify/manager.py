@@ -389,12 +389,10 @@ class DirtyTrackingDict(dict):
         return 'DirtyTrackingDict({})'.format(
                 super(DirtyTrackingDict, self).__repr__())
 
-    def update(self, E=None, **F):
-        for k, v in F.items():
+    def update(self, E={}, **F):
+        for k, v in E.items() + F.items():
             self[k] = v
-        r = super(DirtyTrackingDict, self).update(E, **F)
         self._set_changed()
-        return r
 
     def clear(self):
         r = super(DirtyTrackingDict, self).clear()
